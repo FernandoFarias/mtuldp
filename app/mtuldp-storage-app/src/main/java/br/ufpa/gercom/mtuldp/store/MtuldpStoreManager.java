@@ -15,14 +15,15 @@
  */
 package br.ufpa.gercom.mtuldp.store;
 
-import com.sun.javafx.binding.StringFormatter;
-import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.*;
-import org.neo4j.driver.internal.value.StringValue;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.AuthTokens;
+import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
+import org.onosproject.net.ConnectPoint;
 import org.onosproject.net.Device;
 import org.onosproject.net.Link;
 import org.slf4j.Logger;
@@ -73,19 +74,35 @@ public class MtuldpStoreManager {
             this.session = driver.session();
         }
 
-        private boolean setDevice(Device device) {
+        private boolean createDevice(Device device) {
+
             String query = String.format("CREATE (a:%s {type: '%s', device_id: '%s'})",
                     device.type().name(), device.type().name(), device.id().toString());
 
-            StatementResult sresult = session.run(query);
+            ResultSummary result = session.run(query).consume();
 
-            if (!sresult.hasNext()) {
+            if (result.counters().nodesCreated() == 0) {
                 return false;
             }
             return true;
         }
-        private boolean setLink(Link link){
+        private boolean createLink(Link link){
 
+            ConnectPoint src = link.src();
+            ConnectPoint dst = link.dst();
+
+            String query = String.format("MATCH (a {device_id:'%s'}), (b {device_id:'%s'}) " +
+                            "MERGE (a)-[r:%s{port_src: %d, port_dst: %d, mtu:'null'}]->(b)",
+                    src.deviceId().toString(), dst.deviceId().toString(), link.type().name(),
+                    Integer.getInteger(src.port().name()), Integer.getInteger(dst.port().name()));
+
+            ResultSummary result = session.run(query).consume();
+
+            if (result.counters().relationshipsCreated() == 0){
+                return false;
+            }
+
+            return true;
         }
     }
 
