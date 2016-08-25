@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/mtuldp.iml" filepath="$PROJECT_DIR$/mtuldp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/api/mtuldp-neo4j-driver/mtuldp-neo4j-driver.iml" filepath="$PROJECT_DIR$/api/mtuldp-neo4j-driver/mtuldp-neo4j-driver.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/mtuldp-storage-app/mtuldp-storage-app.iml" filepath="$PROJECT_DIR$/app/mtuldp-storage-app/mtuldp-storage-app.iml" />
+    </modules>
+  </component>
+</project>
