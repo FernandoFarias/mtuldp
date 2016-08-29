@@ -33,12 +33,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <onos.version>1.7.0-SNAPSHOT</onos.version>
-        <onos.app.name></onos.app.name>
-        <onos.app.title>Foo App</onos.app.title>
-        <onos.app.origin>Foo, Inc.</onos.app.origin>
-        <onos.app.category>default</onos.app.category>
+        <onos.app.name>br.ufpa.gercom.mtuldp.store</onos.app.name>
+        <onos.app.title>MTULDP Neo4j Store</onos.app.title>
+        <onos.app.origin>Gercom</onos.app.origin>
+        <onos.app.category>Database</onos.app.category>
         <onos.app.url>http://onosproject.org</onos.app.url>
-        <onos.app.readme>ONOS OSGi bundle archetype.</onos.app.readme>
+        <onos.app.readme>Neo4j database driver</onos.app.readme>
     </properties>
 
     <dependencies>
