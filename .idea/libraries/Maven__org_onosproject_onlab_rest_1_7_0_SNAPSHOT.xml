@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="Maven: org.onosproject:onlab-rest:1.7.0-SNAPSHOT">
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/onlab-rest/1.7.0-SNAPSHOT/onlab-rest-1.7.0-20160827.080546-159.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/onlab-rest/1.7.0-SNAPSHOT/onlab-rest-1.7.0-20160830.080547-160.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/onlab-rest/1.7.0-SNAPSHOT/onlab-rest-1.7.0-20160827.080546-159-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/onlab-rest/1.7.0-SNAPSHOT/onlab-rest-1.7.0-20160830.080547-160-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/onlab-rest/1.7.0-SNAPSHOT/onlab-rest-1.7.0-20160827.080546-159-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/onlab-rest/1.7.0-SNAPSHOT/onlab-rest-1.7.0-20160830.080547-160-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

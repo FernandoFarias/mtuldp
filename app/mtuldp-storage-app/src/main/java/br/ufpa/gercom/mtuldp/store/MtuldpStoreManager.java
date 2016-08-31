@@ -16,22 +16,18 @@
 package br.ufpa.gercom.mtuldp.store;
 
 import org.apache.felix.scr.annotations.*;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.summary.ResultSummary;
-import org.onlab.packet.Ip4Address;
 import org.onlab.packet.IpAddress;
 import org.onlab.packet.MacAddress;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
 import org.onosproject.net.*;
-import org.onosproject.net.behaviour.InterfaceConfig;
+import org.onosproject.net.device.DeviceEvent;
+import org.onosproject.net.device.DeviceListener;
 import org.slf4j.Logger;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -68,7 +64,7 @@ public class MtuldpStoreManager {
         HOST, SWITCH, ROUTER;
     }
 
-    private enum LinkTypes extends MtuldpStore {
+    private enum LinkTypes  {
         DIRECT, EDGE;
     }
 
@@ -85,6 +81,13 @@ public class MtuldpStoreManager {
         MtuldpStore(String neo4j_url, String user, String pass) {
             this.driver = GraphDatabase.driver(neo4j_url, AuthTokens.basic(user, pass));
             this.session = driver.session();
+            if (session.isOpen()){
+                log.info("Connection with neo4j database had opened");
+            }
+        }
+
+        public StatementResult doQuery(String query){
+
         }
 
         private boolean createDevice(Device device) {
@@ -107,11 +110,15 @@ public class MtuldpStoreManager {
             ConnectPoint src = link.src();
             ConnectPoint dst = link.dst();
 
+            String deviceType = DeviceTypes.SWITCH.name();
+            DeviceId srcDeviceId = src.deviceId();
+            DeviceId dstDeviceId = dst.deviceId();
+
+
             String query = String.format("MATCH (a:%s {device_id:'%s'}), (b:%s {device_id:'%s'}) " +
                             "MERGE (a)-[r:%s{port_src: %d, port_dst: %d, mtu:NULL}]->(b)",
-                    DeviceTypes.SWITCH.name(),DeviceTypes.SWITCH.name(),src.deviceId().toString(),
-                    dst.deviceId().toString(), link.type().name(), Integer.getInteger(src.port().name()),
-                    Integer.getInteger(dst.port().name()));
+                    deviceType,deviceType,srcDeviceId.toString(), dstDeviceId.toString(),
+                    link.type().name(), Integer.getInteger(src.port().name()), Integer.getInteger(dst.port().name()));
 
             ResultSummary result = session.run(query).consume();
 
@@ -160,6 +167,53 @@ public class MtuldpStoreManager {
             return true;
         }
 
+        private boolean deleteDevice()
+
+        public void setDevice(Device dev){
+            if (createDevice(dev)){
+                log.info("New device ({}) was created in database", dev.id().toString());
+            } else {
+                throw new RuntimeException("Device cannot be stored on database, review database connection");
+            }
+
+        }
+
+        public void setHost(Host host){
+
+            if (createHost(host)){
+                log.info("New Host ({}) was created on database", host.id().toString());
+             } else {
+                 throw new RuntimeException("The host cannot be stored on database, please review your database connection");
+            }
+        }
+
+        public void setEdgeLink(EdgeLink edge){
+            if (createEdgeLink(edge)){
+                log.info("New Edge Link ({}) was created on database", edge.hostId().toString());
+            } else {
+                throw new RuntimeException("Edge Link cannot be stored on database, review neo4j database connection");
+            }
+        }
+
+        public void setLink(Link link){
+            if (createLink(link)){
+                log.info("New Link ({}) was created on database", link.toString());
+            } else {
+                throw new RuntimeException("Link cannot be stored on database, review neo4j database connection");
+            }
+        }
+
     }
+
+    private class InnerDeviceListener implements DeviceListener {
+
+        @Override
+        public void event(DeviceEvent event) {
+            switch (event.type()){
+                case
+            }
+        }
+    }
+
 }
 
