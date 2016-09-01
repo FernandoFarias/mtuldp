@@ -25,19 +25,19 @@ import org.slf4j.Logger;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class MtuldpNeo4jStore {
+public class Neo4jDriver {
 
     protected final Logger log = getLogger(getClass());
 
     private Driver driver;
     private Session session;
 
-    MtuldpNeo4jStore(String neo4j_url) {
+    Neo4jDriver(String neo4j_url) {
         this.driver = GraphDatabase.driver(neo4j_url);
         this.session = driver.session();
     }
 
-    MtuldpNeo4jStore(String neo4j_url, String user, String pass) {
+    Neo4jDriver(String neo4j_url, String user, String pass) {
         this.driver = GraphDatabase.driver(neo4j_url, AuthTokens.basic(user, pass));
         this.session = driver.session();
         if (session.isOpen()) {
@@ -50,11 +50,17 @@ public class MtuldpNeo4jStore {
         return result;
     }
 
+    public void close(){
+        session.close();
+        driver.close();
+        log.info("Connection wit neo4j was closed");
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MtuldpNeo4jStore that = (MtuldpNeo4jStore) o;
+        Neo4jDriver that = (Neo4jDriver) o;
         return Objects.equal(driver, that.driver) &&
                 Objects.equal(session, that.session);
     }

@@ -2,7 +2,7 @@
  * Copyright 2016 GERCOM, Lab. UFPA.
  *
  * Developer: fernando
- * Serial: 30/08/16 17:09
+ * Serial: 01/09/16 15:56
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,32 @@
  * limitations under the License.
  */
 
+package br.ufpa.gercom.mtuldp.store;
+
+import org.onosproject.net.Device;
+import org.onosproject.net.EdgeLink;
+import org.onosproject.net.Host;
+import org.onosproject.net.Link;
+
 /**
- * Created by fernando on 30/08/16.
+ * Created by fernando on 01/09/16.
  */
-package br.ufpa.gercom.mtuldp.dao;
+public interface MtuldpStoreService {
+
+
+    // Save operations
+    boolean save(Device d);
+    boolean save(Link l);
+    boolean save(EdgeLink el);
+    boolean save(Host h);
+
+    // Delete operations
+    boolean delete(Device d);
+    boolean delete(Link l);
+    boolean delete(EdgeLink el);
+    boolean delete(Host h);
+
+
+
+
+}
