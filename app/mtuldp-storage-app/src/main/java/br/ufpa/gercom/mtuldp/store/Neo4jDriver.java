@@ -45,7 +45,7 @@ public class Neo4jDriver {
         }
     }
 
-    public StatementResult doCypherQuery(String query) {
+    public StatementResult executeCypherQuery(String query) {
         StatementResult result = session.run(query);
         return result;
     }
