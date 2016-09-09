@@ -22,9 +22,12 @@ package br.ufpa.gercom.mtuldp.store;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.summary.ResultSummary;
+import org.neo4j.driver.v1.util.Function;
 import org.onosproject.net.Device;
 import org.onosproject.net.DeviceId;
 import org.slf4j.Logger;
+
+import java.util.List;
 
 import static org.slf4j.LoggerFactory.getLogger;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -134,7 +137,7 @@ public class DeviceManager {
         return false;
     }
 
-    public boolean delete(Device device){
+    public boolean delete(Device device) throws RuntimeException{
 
         checkNotNull(device, "Device Object on DELETE cannot be null");
 
@@ -154,15 +157,18 @@ public class DeviceManager {
     }
 
 
-    public boolean exists(DeviceId id, Device.Type type) {
+    public boolean exists(DeviceId id, Device.Type type) throws RuntimeException {
 
         String query = String.format(EXISTS,type, id.toString());
 
         StatementResult result = driver.executeCypherQuery(query);
-
         Record record = result.single();
 
         return Boolean.getBoolean(record.get("result").asString());
+
+    }
+
+    public boolean setLabel(DeviceId id, String label){
 
     }
 
