@@ -168,9 +168,16 @@ public class DeviceManager {
 
     }
 
-    public boolean setLabel(DeviceId id, String label){
-
+    public boolean setLabel(DeviceId id, String label) throws RuntimeException {
+        String query = String.format(
+                "MATCH (a) " +
+                        "WHERE " +
+                        "a.device_id = '%s' " +
+                        "SET a:%s ");
     }
 
+    public List<String> getLabels(DeviceId id){
+
+    }
 
 }
