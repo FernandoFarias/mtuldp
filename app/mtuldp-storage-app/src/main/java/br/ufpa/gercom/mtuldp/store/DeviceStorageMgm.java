@@ -21,72 +21,43 @@ package br.ufpa.gercom.mtuldp.store;
 
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.summary.ResultSummary;
-import org.neo4j.driver.v1.util.Function;
 import org.onosproject.net.Device;
 import org.onosproject.net.DeviceId;
 import org.slf4j.Logger;
 
 import java.util.List;
 
-import static org.slf4j.LoggerFactory.getLogger;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.slf4j.LoggerFactory.getLogger;
 
 
-public class DeviceManager {
+public class DeviceStorageMgm {
 
     private Neo4jDriver driver;
     private final Logger log = getLogger(getClass());
 
-    private static String CREATE =
-            "MERGE " +
-                    "(a:%s " +
-                    "{" +
-                    "type:'%s', " +
-                    "device_id:'%s', " +
-                    "manufacturer:'%s', " +
-                    "hwVersion:'%s', " +
-                    "swVersion:'%s', " +
-                    "serialNumber:'%s'" +
-                    "}" +
-                    ")";
-
-    private static String UPDATE =
-            "MATCH (a:%s ) " +
-                    "WHERE " +
-                    "a.device_id = '%s'," +
-                    "SET" +
-                    "a.type = '%s'" +
-                    "a.manufacturer = '%s'," +
-                    "a.hwVersion = '%s'," +
-                    "a.swVersion = '%s'," +
-                    "a.serialNumber = '%s'";
-
-
-    private static String DELETE =
-            "MATCH (a:%s)" +
-                    "WHERE " +
-                    "a.device_id = '%s'" +
-                    "DELETE" +
-                    "a";
-
-    private static String EXISTS =
-            "MATCH " +
-                    "(" +
-                    "a:%s" +
-                    ") " +
-                    "WHERE " +
-                    "a.device_id = '%s' " +
-                    "RETURN  " +
-                    "a IS NOT NULL as result";
-
-    public DeviceManager(Neo4jDriver driver) {
+    public DeviceStorageMgm(Neo4jDriver driver) {
         this.driver = driver;
     }
 
     public boolean create(Device device) throws RuntimeException {
 
         checkNotNull(device, "Device Object cannot be null");
+
+        String CREATE =
+                "MERGE " +
+                        "(a:%s " +
+                        "{" +
+                        "type:'%s', " +
+                        "device_id:'%s', " +
+                        "manufacturer:'%s', " +
+                        "hwVersion:'%s', " +
+                        "swVersion:'%s', " +
+                        "serialNumber:'%s'" +
+                        "}" +
+                        ")";
 
         String type = device.type().name();
         String device_id = device.id().toString();
@@ -116,6 +87,17 @@ public class DeviceManager {
         checkNotNull(id, "Device ID on UPDATE cannot be null");
         checkNotNull(device, "Device Object on UPDATE cannot be null");
 
+        String UPDATE =
+                "MATCH (a:%s ) " +
+                        "WHERE " +
+                        "a.device_id = '%s'," +
+                        "SET" +
+                        "a.type = '%s'" +
+                        "a.manufacturer = '%s'," +
+                        "a.hwVersion = '%s'," +
+                        "a.swVersion = '%s'," +
+                        "a.serialNumber = '%s'";
+
         String type = device.type().name();
         String device_id = device.id().toString();
         String manufacturer = device.manufacturer();
@@ -141,6 +123,13 @@ public class DeviceManager {
 
         checkNotNull(device, "Device Object on DELETE cannot be null");
 
+        String DELETE =
+                "MATCH (a:%s)" +
+                        "WHERE " +
+                        "a.device_id = '%s'" +
+                        "DELETE" +
+                        "a";
+
         String query = String.format(DELETE,device.type().name(), device.id().toString());
 
         StatementResult result = driver.executeCypherQuery(query);
@@ -157,9 +146,18 @@ public class DeviceManager {
     }
 
 
-    public boolean exists(DeviceId id, Device.Type type) throws RuntimeException {
+    public boolean exists(DeviceId id) throws RuntimeException {
 
-        String query = String.format(EXISTS,type, id.toString());
+        checkNotNull(id,"Device id cannot be null");
+
+        String EXISTS =
+                "MATCH (a)" +
+                        "WHERE " +
+                        "a.device_id = '%s' " +
+                        "RETURN  " +
+                        "a IS NOT NULL as result";
+
+        String query = String.format(EXISTS, id.toString());
 
         StatementResult result = driver.executeCypherQuery(query);
         Record record = result.single();
@@ -168,16 +166,55 @@ public class DeviceManager {
 
     }
 
-    public boolean setLabel(DeviceId id, String label) throws RuntimeException {
-        String query = String.format(
-                "MATCH (a) " +
+    public boolean setDeviceLabel(DeviceId id, String label) throws RuntimeException {
+
+        checkNotNull(id, "Device id cannot be null");
+        checkNotNull(label, "Device label cannot be null");
+
+        String SETLABEL =
+                "MATCH (a)" +
+                        "WHERE" +
+                        "a.device_id = '%s'" +
+                        "SET a:%s";
+
+        String query = String.format(SETLABEL, id.toString(), label);
+        StatementResult result = driver.executeCypherQuery(query);
+        ResultSummary summary = result.consume();
+
+        if (summary.counters().labelsAdded() == 0){
+            log.error("Already label added to device ({})", id.toString());
+            return false;
+        }
+        log.info("New label was inserted into device ({})", id.toString());
+        return true;
+    }
+
+    public List<String> getDeviceLabels(DeviceId id) throws RuntimeException {
+
+        checkNotNull(id, "Device id cannot be null");
+
+        String GETLABELS =
+                "MATCH (a)" +
                         "WHERE " +
-                        "a.device_id = '%s' " +
-                        "SET a:%s ");
+                        "a.device_id = %s" +
+                        "RETURN" +
+                        "labels(a) as labels";
+
+        String query = String.format(GETLABELS, id.toString());
+
+        StatementResult result = driver.executeCypherQuery(query);
+
+        if (result.list().isEmpty()){
+            log.error("Object id ({}) could be not exist", id.toString());
+            return null;
+        }
+
+        if (result.list().size() > 1 ){
+            log.error("There is more devices with id ({})", id.toString());
+            return null;
+        }
+
+        Record record = result.single();
+        return record.get("labels").asList(Value::asString);
     }
-
-    public List<String> getLabels(DeviceId id){
-
-    }
-
 }
