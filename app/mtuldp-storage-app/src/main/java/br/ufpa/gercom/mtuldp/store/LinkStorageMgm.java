@@ -20,9 +20,13 @@
 package br.ufpa.gercom.mtuldp.store;
 
 
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.summary.ResultSummary;
+import org.onosproject.net.EdgeLink;
 import org.onosproject.net.Link;
 import org.slf4j.Logger;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 
@@ -36,32 +40,118 @@ public class LinkStorageMgm {
         this.driver = driver;
     }
 
-    public boolean create(Link link) {
+    public boolean create(Link link) throws RuntimeException {
 
+
+        checkNotNull(link, "Link object cannot be null");
 
         String CREATE =
                 "MATCH " +
-                        "(a:%s{device_id:'%s'})," +
-                        "(b:%s{device_id:'%s'}" +
+                        "(a:{device_id:'%s'})," +
+                        "(b:{device_id:'%s'})" +
                         "MERGE" +
-                        "(a)-[r:%s{}] ";
+                        "(a)-[r:%s" +
+                        "{" +
+                        "id:%s," +
+                        "src:%s," +
+                        "src_port:%s," +
+                        "dst:%s," +
+                        "dst_port:%s," +
+                        "state:%s" +
+                        "}]->(b)";
 
 
         String id = link.providerId().id();
         String src_id = link.src().deviceId().toString();
+        String src_port = link.src().port().name();
         String dst_id = link.dst().deviceId().toString();
+        String dst_port = link.dst().port().name();
         String state = link.state().name();
         String type = link.type().name();
 
 
+        String query = String.format(CREATE, src_id, dst_id, type, id,
+                src_id, src_port, dst_id, dst_port, state);
 
+        StatementResult result = driver.executeCypherQuery(query);
+        ResultSummary summary = result.consume();
 
-        return false;
+        if (summary.counters().relationshipsCreated() == 0) {
+
+            log.error("Link already exists or error on transaction");
+            return false;
+        }
+        log.info("New relationship had created between ({}) -> ({})", src_id, dst_id);
+        return true;
+    }
+
+    public boolean update(Link link) throws RuntimeException {
+
+        checkNotNull(link, "Link object cannot be null");
+
+        String UPDATE =
+                "MATCH ()-[r]->() " +
+                        "WHERE" +
+                        "r.src = '%s'" +
+                        "r.dst = '%s'" +
+                        "SET" +
+                        "r.id = '%s'," +
+                        "r.src_port = '%s'," +
+                        "r.dst_port = '%s'," +
+                        "r.state = '%s'";
+
+        String src = link.src().deviceId().toString();
+        String dst = link.dst().deviceId().toString();
+
+        String id = link.providerId().id();
+        String src_port = link.src().port().name();
+        String dst_port = link.dst().port().name();
+        String state = link.state().name();
+
+        String query = String.format(UPDATE, src, dst, id, src_port, dst_port, state);
+
+        StatementResult result = driver.executeCypherQuery(query);
+        ResultSummary summary = result.consume();
+
+        if (!summary.counters().containsUpdates()) {
+
+            log.error("The link ({}) cannot be update", link.providerId().id());
+            return false;
+        }
+
+        log.info("The Link ({}) had been updated", link.providerId().id());
+        return true;
+
+    }
+
+    public boolean delete(Link link) throws RuntimeException {
+
+        checkNotNull(link, "Link object cannot be null");
+
+        String DELETE =
+                "MATCH ()-[r]->()" +
+                        "WHERE" +
+                        "src = '%s'" +
+                        "dst = '%s'" +
+                        "DELETE" +
+                        "r";
+
+        String src = link.src().deviceId().toString();
+        String dst = link.dst().deviceId().toString();
+
+        String query = String.format(DELETE, src, dst);
+
+        StatementResult result = driver.executeCypherQuery(query);
+        ResultSummary summary = result.consume();
+
+        if (summary.counters().relationshipsDeleted() == 0){
+            log.error("The link ({}) cannot be deleted", link.providerId().id());
+            return false;
+        }
+
+        log.info("The link ({}) had deleted with sucessfully");
+        return true;
     }
 
 
-
-
-
-            ;
 }

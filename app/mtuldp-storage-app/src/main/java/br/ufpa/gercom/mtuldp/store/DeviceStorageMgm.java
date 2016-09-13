@@ -50,7 +50,6 @@ public class DeviceStorageMgm {
                 "MERGE " +
                         "(a:%s " +
                         "{" +
-                        "type:'%s', " +
                         "device_id:'%s', " +
                         "manufacturer:'%s', " +
                         "hwVersion:'%s', " +
@@ -67,7 +66,7 @@ public class DeviceStorageMgm {
         String serialNumber = device.serialNumber();
 
 
-        String query = String.format(CREATE, type, type, device_id, manufacturer,
+        String query = String.format(CREATE, type, device_id, manufacturer,
                 hwVersion, swVersion, serialNumber);
 
         StatementResult result = driver.executeCypherQuery(query);
@@ -88,24 +87,22 @@ public class DeviceStorageMgm {
         checkNotNull(device, "Device Object on UPDATE cannot be null");
 
         String UPDATE =
-                "MATCH (a:%s ) " +
+                "MATCH (a) " +
                         "WHERE " +
                         "a.device_id = '%s'," +
                         "SET" +
-                        "a.type = '%s'" +
                         "a.manufacturer = '%s'," +
                         "a.hwVersion = '%s'," +
                         "a.swVersion = '%s'," +
                         "a.serialNumber = '%s'";
 
-        String type = device.type().name();
         String device_id = device.id().toString();
         String manufacturer = device.manufacturer();
         String hwVersion = device.hwVersion();
         String swVersion = device.swVersion();
         String serialNumber = device.serialNumber();
 
-        String query = String.format(UPDATE,type,device_id, type,manufacturer,
+        String query = String.format(UPDATE,device_id,manufacturer,
                 hwVersion,swVersion,serialNumber);
 
         StatementResult result = driver.executeCypherQuery(query);
@@ -124,13 +121,13 @@ public class DeviceStorageMgm {
         checkNotNull(device, "Device Object on DELETE cannot be null");
 
         String DELETE =
-                "MATCH (a:%s)" +
+                "MATCH (a)" +
                         "WHERE " +
                         "a.device_id = '%s'" +
                         "DELETE" +
                         "a";
 
-        String query = String.format(DELETE,device.type().name(), device.id().toString());
+        String query = String.format(DELETE, device.id().toString());
 
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
