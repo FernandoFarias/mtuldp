@@ -19,12 +19,17 @@
 
 package br.ufpa.gercom.mtuldp.store;
 
+import com.google.common.base.Objects;
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.onosproject.net.Host;
+import org.onosproject.net.HostId;
 import org.slf4j.Logger;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -49,14 +54,14 @@ public class HostStorageMgm {
                         "(a:%s" +
                         "{" +
                         "host_id:'%s'," +
-                        "mac:'%s'" +
-                        "ip:%s" +
+                        "mac:'%s'," +
+                        "ip:%s," +
                         "vlan:'%s'" +
                         "})";
 
 
 
-        String type = Host.class.getName();
+        String type = Host.class.getSimpleName();
         String host_id = host.id().toString();
         String mac =  host.mac().toString();
         String vlan = host.vlan().toString();
@@ -85,7 +90,177 @@ public class HostStorageMgm {
 
     public boolean update (Host host) throws RuntimeException {
 
-        checkNotNull(device, "Device Object cannot be null");
+        checkNotNull(host, "Host Object cannot be null");
+
+        String UPDATE =
+                "MATCH" +
+                        "(a:%s)" +
+                        "WHERE" +
+                        "a.host_id = '%s'" +
+                        "SET" +
+                        "a.mac = '%s'," +
+                        "a.vlan = '%s'," +
+                        "a.ip = %s";
+
+        String type = Host.class.getSimpleName();
+        String id = host.id().toString();
+        String mac = host.mac().toString();
+        String vlan = host.vlan().toString();
+        Set<String> ip = new LinkedHashSet<>();
+
+        host.ipAddresses().forEach(ipAddress -> {
+            ip.add("\'"+ipAddress.toString()+"\'");
+        });
+
+        String query = String.format(UPDATE,type,id,mac,vlan,ip.toString());
+
+        StatementResult result = driver.executeCypherQuery(query);
+        ResultSummary summary = result.consume();
+
+        if (!summary.counters().containsUpdates()){
+            log.error("Host id ({}) cannot be updated, data is not different or transaction error");
+            return false;
+        }
+
+        log.info("Host id ({}) was updated", id);
+        return true;
+    }
+
+    public boolean delete(Host host) throws RuntimeException{
+        checkNotNull(host, "Host Object cannot be null");
+
+        String DELETE =
+                "MATCH (a:%s)" +
+                        "WHERE" +
+                        "a.host_id = '%s'" +
+                        "DELETE" +
+                        "a";
+
+        String type = Host.class.getSimpleName();
+        String host_id = host.id().toString();
+
+        String query = String.format(DELETE, type,host_id);
+
+        StatementResult result = driver.executeCypherQuery(query);
+        ResultSummary summary = result.consume();
+
+        if (summary.counters().nodesDeleted() == 0){
+            log.error("Host id ({}) cannot be updated, host not exist or transaction error", host_id);
+            return false;
+        }
+
+        log.info("Host id ({}) was deleted", host_id);
+        return true;
+    }
+
+    public boolean exist(HostId id) throws RuntimeException{
+
+        checkNotNull(id, "Host id Object cannot be null");
+
+        String EXIST =
+                "MATCH (a:%s)" +
+                        "WHERE" +
+                        "a.host_id = '%s'" +
+                        "RETURN " +
+                        "a IS NOT NULL as result";
+
+        String type = Host.class.getSimpleName();
+
+        String query = String.format(EXIST, type, id.toString());
+
+        StatementResult result = driver.executeCypherQuery(query);
+
+
+        if (result.list().isEmpty()){
+            return false;
+        }
+
+        Record record = result.single();
+        return Boolean.getBoolean(record.get("result").asString());
+    }
+
+    public boolean setHostLabel (HostId id,String label) throws RuntimeException{
+
+        checkNotNull(id, "Host id cannot be null");
+        checkNotNull(label, "Host label cannot be null");
+
+
+        String SETLABEL =
+                "MATCH (a:%s)" +
+                        "WHERE" +
+                        "a.host_id = '%s'" +
+                        "SET a:%s";
+
+
+        String type = Host.class.getSimpleName();
+
+        String query = String.format(SETLABEL, type, id.toString(), label);
+
+        StatementResult result = driver.executeCypherQuery(query);
+        ResultSummary summary = result.consume();
+
+        if (summary.counters().labelsAdded() == 0){
+            log.error("Label already added to host ({})", id.toString());
+            return false;
+        }
+
+        log.info("New label was inserted to Host ({})", id.toString());
+        return true;
 
     }
+
+    public List<String> getHostLabels(HostId id) throws RuntimeException {
+
+        checkNotNull(id, "Host id cannot be null");
+
+        String GETLABEL =
+                "MATCH (a:%s)" +
+                        "WHERE" +
+                        "a.host_id = '%s'" +
+                        "RETURN" +
+                        "labels(a) as labels";
+
+
+        String type = Host.class.getSimpleName();
+
+        String query = String.format(GETLABEL,type,id.toString());
+
+        StatementResult result = driver.executeCypherQuery(query);
+
+        if (result.list().isEmpty()){
+            log.error("Object id ({}) could be not exist", id.toString());
+            return null;
+        }
+
+        Record record = result.single();
+        return record.get("labels").asList(Value::asString);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        HostStorageMgm that = (HostStorageMgm) o;
+        return Objects.equal(driver, that.driver);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(driver);
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

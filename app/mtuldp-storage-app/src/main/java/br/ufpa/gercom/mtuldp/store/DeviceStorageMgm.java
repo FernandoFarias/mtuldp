@@ -109,10 +109,11 @@ public class DeviceStorageMgm {
         ResultSummary summary = result.consume();
 
         if (summary.counters().containsUpdates()){
-            log.info("the node ({}) cannot be updated", device_id);
+            log.error("Device id ({}) cannot be updated, data is not different or transaction error", device_id);
             return true;
         }
 
+        log.info("Device id ({}) was updated", device_id);
         return false;
     }
 
@@ -157,9 +158,14 @@ public class DeviceStorageMgm {
         String query = String.format(EXISTS, id.toString());
 
         StatementResult result = driver.executeCypherQuery(query);
+
+        if (result.list().isEmpty()){
+           return false;
+        }
+
         Record record = result.single();
 
-        return Boolean.getBoolean(record.get("result").asString());
+        return record.get("result").asBoolean();
 
     }
 
@@ -179,10 +185,10 @@ public class DeviceStorageMgm {
         ResultSummary summary = result.consume();
 
         if (summary.counters().labelsAdded() == 0){
-            log.error("Already label added to device ({})", id.toString());
+            log.error("Label already added to device ({})", id.toString());
             return false;
         }
-        log.info("New label was inserted into device ({})", id.toString());
+        log.info("New label was inserted to device ({})", id.toString());
         return true;
     }
 
@@ -203,11 +209,6 @@ public class DeviceStorageMgm {
 
         if (result.list().isEmpty()){
             log.error("Object id ({}) could be not exist", id.toString());
-            return null;
-        }
-
-        if (result.list().size() > 1 ){
-            log.error("There is more devices with id ({})", id.toString());
             return null;
         }
 

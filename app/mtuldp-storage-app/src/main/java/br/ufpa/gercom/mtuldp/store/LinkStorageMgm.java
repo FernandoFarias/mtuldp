@@ -20,11 +20,14 @@
 package br.ufpa.gercom.mtuldp.store;
 
 
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.summary.ResultSummary;
-import org.onosproject.net.EdgeLink;
 import org.onosproject.net.Link;
 import org.slf4j.Logger;
+
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -153,5 +156,92 @@ public class LinkStorageMgm {
         return true;
     }
 
+    public boolean exist(Link link) throws RuntimeException{
 
+        checkNotNull(link, "Link object cannot be null");
+
+        String EXIST =
+                "MATCH ()-[r]->()" +
+                        "WHERE" +
+                        "r.src = '%s'" +
+                        "r.dst = '%s'" +
+                        "RETURN" +
+                        "a IS NOT NULL as result";
+
+
+        String src = link.src().deviceId().toString();
+        String dst = link.dst().deviceId().toString();
+
+        String query = String.format(EXIST,src,dst);
+
+        StatementResult result = driver.executeCypherQuery(query);
+
+        if (result.list().isEmpty()){
+            return false;
+        }
+
+        Record record = result.single();
+
+        return record.get("result").asBoolean();
+    }
+
+    public boolean setLinkLabel(Link link, String label){
+
+        checkNotNull(link, "Link object cannot be null");
+        checkNotNull(label, "Label name cannot be null");
+
+        String SETLABEL =
+                "MATCH ()-[r]->()" +
+                        "WHERE" +
+                        "r.src = '%s'" +
+                        "r.dst = '%s'" +
+                        "SET" +
+                        "r:%s";
+
+
+        String src = link.src().deviceId().toString();
+        String dst = link.dst().deviceId().toString();
+
+        String query = String.format(SETLABEL, src, dst, label);
+
+        StatementResult result = driver.executeCypherQuery(query);
+        ResultSummary summary = result.consume();
+
+
+        if (summary.counters().labelsAdded() == 0){
+            log.error("Label already added to link ({})->({})", src,dst);
+            return false;
+        }
+
+        log.info("New label was inserted to link ({})->({})",src,dst);
+        return true;
+    }
+
+    public List<String> getLinkLabels(Link link){
+        checkNotNull(link, "Link object cannot be null");
+
+        String GETLABELS =
+                "MATCH ()-[r]->()" +
+                        "WHERE" +
+                        "r.src = '%s'" +
+                        "r.dst = '%s'" +
+                        "RETURN" +
+                        "lables(r) as lables";
+
+        String src = link.src().deviceId().toString();
+        String dst = link.dst().deviceId().toString();
+
+        String query = String.format(GETLABELS,src,dst);
+
+        StatementResult result = driver.executeCypherQuery(query);
+
+        if (result.list().isEmpty()){
+            log.error("link could be not exist");
+            return null;
+        }
+
+        Record record = result.single();
+        return record.get("labels").asList(Value::asString);
+
+    }
 }
