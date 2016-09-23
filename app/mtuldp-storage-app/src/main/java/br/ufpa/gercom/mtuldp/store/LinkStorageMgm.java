@@ -35,11 +35,11 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 public class LinkStorageMgm {
 
-    private Neo4jDriver driver;
+    private Neo4jIntegration driver;
     private Logger log = getLogger(getClass());
 
 
-    public LinkStorageMgm(Neo4jDriver driver) {
+    public LinkStorageMgm(Neo4jIntegration driver) {
         this.driver = driver;
     }
 
@@ -50,8 +50,8 @@ public class LinkStorageMgm {
 
         String CREATE =
                 "MATCH " +
-                        "(a:{device_id:'%s'})," +
-                        "(b:{device_id:'%s'})" +
+                        "(a {device_id:'%s'})," +
+                        "(b {device_id:'%s'})" +
                         "MERGE" +
                         "(a)-[r:%s" +
                         "{" +
@@ -197,7 +197,6 @@ public class LinkStorageMgm {
                         "r.dst = '%s'" +
                         "SET" +
                         "r:%s";
-
 
         String src = link.src().deviceId().toString();
         String dst = link.dst().deviceId().toString();

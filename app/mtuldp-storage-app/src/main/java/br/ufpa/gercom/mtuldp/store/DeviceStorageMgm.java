@@ -35,10 +35,10 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 public class DeviceStorageMgm {
 
-    private Neo4jDriver driver;
+    private Neo4jIntegration driver;
     private final Logger log = getLogger(getClass());
 
-    public DeviceStorageMgm(Neo4jDriver driver) {
+    public DeviceStorageMgm(Neo4jIntegration driver) {
         this.driver = driver;
     }
 

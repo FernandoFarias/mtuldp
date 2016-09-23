@@ -25,19 +25,19 @@ import org.slf4j.Logger;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class Neo4jDriver {
+public class Neo4jIntegration {
 
     protected final Logger log = getLogger(getClass());
 
     private Driver driver;
     private Session session;
 
-    Neo4jDriver(String neo4j_url) {
+    Neo4jIntegration(String neo4j_url) {
         this.driver = GraphDatabase.driver(neo4j_url);
         this.session = driver.session();
     }
 
-    Neo4jDriver(String neo4j_url, String user, String pass) {
+    Neo4jIntegration(String neo4j_url, String user, String pass) {
         this.driver = GraphDatabase.driver(neo4j_url, AuthTokens.basic(user, pass));
         this.session = driver.session();
         if (session.isOpen()) {
@@ -60,7 +60,7 @@ public class Neo4jDriver {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Neo4jDriver that = (Neo4jDriver) o;
+        Neo4jIntegration that = (Neo4jIntegration) o;
         return Objects.equal(driver, that.driver) &&
                 Objects.equal(session, that.session);
     }

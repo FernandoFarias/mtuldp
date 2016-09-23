@@ -19,7 +19,6 @@
 
 package br.ufpa.gercom.mtuldp.store;
 
-import com.google.common.base.Objects;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
@@ -37,11 +36,11 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 public class HostStorageMgm {
 
-    private Neo4jDriver driver;
+    private Neo4jIntegration driver;
     private final Logger log = getLogger(getClass());
 
 
-    public HostStorageMgm(Neo4jDriver driver) {
+    public HostStorageMgm(Neo4jIntegration driver) {
         this.driver = driver;
     }
 
@@ -60,25 +59,24 @@ public class HostStorageMgm {
                         "})";
 
 
-
         String type = Host.class.getSimpleName();
         String host_id = host.id().toString();
-        String mac =  host.mac().toString();
+        String mac = host.mac().toString();
         String vlan = host.vlan().toString();
-        Set<String> ip  = new LinkedHashSet<>();
+        Set<String> ip = new LinkedHashSet<>();
 
         host.ipAddresses().forEach(ipAddress -> {
-            ip.add("\'"+ipAddress.toString()+"\'");
+            ip.add("\'" + ipAddress.toString() + "\'");
         });
 
 
-        String query = String.format(CREATE,type,host_id,mac,ip.toString(),vlan);
+        String query = String.format(CREATE, type, host_id, mac, ip.toString(), vlan);
 
 
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
 
-        if (summary.counters().nodesCreated() == 0){
+        if (summary.counters().nodesCreated() == 0) {
             log.error("Host id ({}) cannot be create by host already exists or error transaction", host_id);
             return false;
         }
@@ -88,7 +86,7 @@ public class HostStorageMgm {
     }
 
 
-    public boolean update (Host host) throws RuntimeException {
+    public boolean update(Host host) throws RuntimeException {
 
         checkNotNull(host, "Host Object cannot be null");
 
@@ -109,15 +107,15 @@ public class HostStorageMgm {
         Set<String> ip = new LinkedHashSet<>();
 
         host.ipAddresses().forEach(ipAddress -> {
-            ip.add("\'"+ipAddress.toString()+"\'");
+            ip.add("\'" + ipAddress.toString() + "\'");
         });
 
-        String query = String.format(UPDATE,type,id,mac,vlan,ip.toString());
+        String query = String.format(UPDATE, type, id, mac, vlan, ip.toString());
 
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
 
-        if (!summary.counters().containsUpdates()){
+        if (!summary.counters().containsUpdates()) {
             log.error("Host id ({}) cannot be updated, data is not different or transaction error");
             return false;
         }
@@ -126,7 +124,7 @@ public class HostStorageMgm {
         return true;
     }
 
-    public boolean delete(Host host) throws RuntimeException{
+    public boolean delete(Host host) throws RuntimeException {
         checkNotNull(host, "Host Object cannot be null");
 
         String DELETE =
@@ -139,12 +137,12 @@ public class HostStorageMgm {
         String type = Host.class.getSimpleName();
         String host_id = host.id().toString();
 
-        String query = String.format(DELETE, type,host_id);
+        String query = String.format(DELETE, type, host_id);
 
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
 
-        if (summary.counters().nodesDeleted() == 0){
+        if (summary.counters().nodesDeleted() == 0) {
             log.error("Host id ({}) cannot be updated, host not exist or transaction error", host_id);
             return false;
         }
@@ -153,7 +151,7 @@ public class HostStorageMgm {
         return true;
     }
 
-    public boolean exist(HostId id) throws RuntimeException{
+    public boolean exist(HostId id) throws RuntimeException {
 
         checkNotNull(id, "Host id Object cannot be null");
 
@@ -171,7 +169,7 @@ public class HostStorageMgm {
         StatementResult result = driver.executeCypherQuery(query);
 
 
-        if (result.list().isEmpty()){
+        if (result.list().isEmpty()) {
             return false;
         }
 
@@ -179,7 +177,7 @@ public class HostStorageMgm {
         return Boolean.getBoolean(record.get("result").asString());
     }
 
-    public boolean setHostLabel (HostId id,String label) throws RuntimeException{
+    public boolean setHostLabel(HostId id, String label) throws RuntimeException {
 
         checkNotNull(id, "Host id cannot be null");
         checkNotNull(label, "Host label cannot be null");
@@ -199,7 +197,7 @@ public class HostStorageMgm {
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
 
-        if (summary.counters().labelsAdded() == 0){
+        if (summary.counters().labelsAdded() == 0) {
             log.error("Label already added to host ({})", id.toString());
             return false;
         }
@@ -223,30 +221,17 @@ public class HostStorageMgm {
 
         String type = Host.class.getSimpleName();
 
-        String query = String.format(GETLABEL,type,id.toString());
+        String query = String.format(GETLABEL, type, id.toString());
 
         StatementResult result = driver.executeCypherQuery(query);
 
-        if (result.list().isEmpty()){
+        if (result.list().isEmpty()) {
             log.error("Object id ({}) could be not exist", id.toString());
             return null;
         }
 
         Record record = result.single();
         return record.get("labels").asList(Value::asString);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        HostStorageMgm that = (HostStorageMgm) o;
-        return Objects.equal(driver, that.driver);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(driver);
     }
 }
 

@@ -15,16 +15,10 @@
  */
 package br.ufpa.gercom.mtuldp.store;
 
-import br.ufpa.gercom.mtuldp.dao.DeviceService;
-import br.ufpa.gercom.mtuldp.dao.LinkService;
-import br.ufpa.gercom.mtuldp.dao.Neo4jService;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
-import org.onosproject.net.*;
-
-import java.util.List;
 
 /**
  * Skeletal ONOS application component.
@@ -41,17 +35,6 @@ public class MtuldpStoreManager {
 
     @Deactivate
     public void deactivate(){
-
-    }
-
-
-    @Override
-    public void save(Device device) {
-
-    }
-
-    @Override
-    public void delete(Device device) {
 
     }
 }
