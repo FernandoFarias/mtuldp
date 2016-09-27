@@ -20,7 +20,13 @@
 package br.ufpa.gercom.mtuldp.store;
 
 
+import com.google.common.base.Preconditions;
+import org.apache.commons.lang.StringUtils;
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.summary.ResultSummary;
+import org.onosproject.net.Device;
 import org.onosproject.net.EdgeLink;
+import org.onosproject.net.Host;
 import org.slf4j.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -44,17 +50,82 @@ public class EdgeLinkStorageMgm {
 
         String CREATE =
                 "MATCH " +
-                        "(a:%s {host_id:'%s'})," +
-                        "(b {device_id:'%s'})" +
+                        "(a: %s {host_id:'%s'})," +
+                        "(b: %s {device_id:'%s'})" +
                         "MERGE" +
                         "(a)-[r:%s" +
                         "{" +
-                        "id:%s" +
-                        "host:%s" +
-                        "edge:%s" +
-                        "edge_port:%s" +
-                        
-                        "}";
+                        "id:'%s'," +
+                        "host:'%s'," +
+                        "edge:'%s'," +
+                        "edge_port:'%s'" +
+                        "state: '%s'" +
+                        "}]-(b)";
 
+        String id = getId(edgeLink);
+        String host = edgeLink.hostId().toString();
+        String edge = edgeLink.hostLocation().deviceId().toString();
+        String edge_port = edgeLink.hostLocation().port().name();
+        String type_link = EdgeLink.Type.EDGE.name();
+        String type_edge = Device.Type.SWITCH.name();
+        String type_host = Host.class.getSimpleName();
+        String state = edgeLink.state().name();
+
+        String query =  String.format(CREATE,type_host,host,type_edge,
+                edge,type_link,id,host,edge,edge_port);
+
+        StatementResult result = driver.executeCypherQuery(query);
+        ResultSummary summary = result.consume();
+
+        if (summary.counters().relationshipsCreated() == 0){
+
+            log.error("EdgeLink already exists or error on transaction");
+            return false;
+        }
+
+        log.info("New edge link had created between host ({}) -> edge ({})", host, edge);
+        return true;
+    }
+
+    public boolean update (EdgeLink edgeLink) throws RuntimeException {
+
+        String UPDATE =
+                "MATCH ()-[r:%s {id:'%s'}]-()" +
+                        "SET" +
+                        "edge_port:'%s'" +
+                        "state: '%s'";
+
+        String type = EdgeLink.Type.EDGE.name();
+        String id = getId(edgeLink);
+        String edge_port = edgeLink.hostLocation().port().name();
+        String state = edgeLink.state().name();
+
+        String query = String.format(UPDATE, type,id,edge_port,state);
+
+        StatementResult result = driver.executeCypherQuery(query);
+        ResultSummary summary = result.consume();
+
+        if (!summary.counters().containsUpdates()){
+            log.error("The EdgeLink ({}) cannot be update or not found", id);
+            return false;
+        }
+
+        log.info("The EdgeLink ({}) had been updated", id);
+        return true;
+    }
+
+    public boolean delete() throws RuntimeException {
+        String DELETE =
+                "a";
+    }
+
+    private String getId(EdgeLink edgeLink){
+
+        // id = object:type:host:edge
+        String id = "%s:%s:%s:%s";
+
+        return StringUtils.lowerCase(String.format(id,EdgeLink.class.getSimpleName(),
+                EdgeLink.Type.EDGE.name(),edgeLink.hostId().toString(),
+                edgeLink.hostLocation().deviceId().toString()));
     }
 }

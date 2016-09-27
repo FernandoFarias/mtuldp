@@ -58,7 +58,7 @@ public class DeviceStorageMgm {
                         "}" +
                         ")";
 
-        String type = device.type().name();
+        String type = Device.Type.SWITCH.name();
         String device_id = device.id().toString();
         String manufacturer = device.manufacturer();
         String hwVersion = device.hwVersion();

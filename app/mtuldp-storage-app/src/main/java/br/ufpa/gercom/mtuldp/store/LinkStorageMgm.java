@@ -20,6 +20,7 @@
 package br.ufpa.gercom.mtuldp.store;
 
 
+import org.apache.commons.lang.StringUtils;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
@@ -64,13 +65,13 @@ public class LinkStorageMgm {
                         "}]->(b)";
 
 
-        String id = link.providerId().id();
+        String id = getId(link);
         String src_id = link.src().deviceId().toString();
         String src_port = link.src().port().name();
         String dst_id = link.dst().deviceId().toString();
         String dst_port = link.dst().port().name();
         String state = link.state().name();
-        String type = link.type().name();
+        String type = Link.Type.DIRECT.name();
 
 
         String query = String.format(CREATE, src_id, dst_id, type, id,
@@ -93,25 +94,19 @@ public class LinkStorageMgm {
         checkNotNull(link, "Link object cannot be null");
 
         String UPDATE =
-                "MATCH ()-[r]->() " +
-                        "WHERE" +
-                        "r.src = '%s'" +
-                        "r.dst = '%s'" +
+                "MATCH ()-[r:%s{id:'%s'}]->() " +
                         "SET" +
-                        "r.id = '%s'," +
                         "r.src_port = '%s'," +
                         "r.dst_port = '%s'," +
                         "r.state = '%s'";
 
-        String src = link.src().deviceId().toString();
-        String dst = link.dst().deviceId().toString();
-
-        String id = link.providerId().id();
+        String id = getId(link);
+        String type = Link.Type.DIRECT.name();
         String src_port = link.src().port().name();
         String dst_port = link.dst().port().name();
         String state = link.state().name();
 
-        String query = String.format(UPDATE, src, dst, id, src_port, dst_port, state);
+        String query = String.format(UPDATE,type,id,src_port,dst_port,state);
 
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
@@ -132,17 +127,14 @@ public class LinkStorageMgm {
         checkNotNull(link, "Link object cannot be null");
 
         String DELETE =
-                "MATCH ()-[r]->()" +
-                        "WHERE" +
-                        "src = '%s'" +
-                        "dst = '%s'" +
+                "MATCH ()-[r:%s{id:'%s'}]->()" +
                         "DELETE" +
                         "r";
 
-        String src = link.src().deviceId().toString();
-        String dst = link.dst().deviceId().toString();
+        String id = getId(link);
+        String type = Link.Type.DIRECT.name();
 
-        String query = String.format(DELETE, src, dst);
+        String query = String.format(DELETE,type,id);
 
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
@@ -161,18 +153,15 @@ public class LinkStorageMgm {
         checkNotNull(link, "Link object cannot be null");
 
         String EXIST =
-                "MATCH ()-[r]->()" +
-                        "WHERE" +
-                        "r.src = '%s'" +
-                        "r.dst = '%s'" +
+                "MATCH ()-[r:%s {id:'%s'}]->()" +
                         "RETURN" +
-                        "a IS NOT NULL as result";
+                        "r IS NOT NULL as result";
 
 
-        String src = link.src().deviceId().toString();
-        String dst = link.dst().deviceId().toString();
+        String id = getId(link);
+        String type = Link.Type.DIRECT.name();
 
-        String query = String.format(EXIST,src,dst);
+        String query = String.format(EXIST,type,id);
 
         StatementResult result = driver.executeCypherQuery(query);
 
@@ -191,28 +180,26 @@ public class LinkStorageMgm {
         checkNotNull(label, "Label name cannot be null");
 
         String SETLABEL =
-                "MATCH ()-[r]->()" +
-                        "WHERE" +
-                        "r.src = '%s'" +
-                        "r.dst = '%s'" +
+                "MATCH ()-[r:%s{id:'%s'}]->()" +
                         "SET" +
                         "r:%s";
 
-        String src = link.src().deviceId().toString();
-        String dst = link.dst().deviceId().toString();
-
-        String query = String.format(SETLABEL, src, dst, label);
+        String id = getId(link);
+        String type = Link.Type.DIRECT.name();
+        String query = String.format(SETLABEL,type,id,label);
 
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
 
 
         if (summary.counters().labelsAdded() == 0){
-            log.error("Label already added to link ({})->({})", src,dst);
+            log.error("Label already added to link");
             return false;
         }
 
-        log.info("New label was inserted to link ({})->({})",src,dst);
+        log.info("New label was inserted to link ({})->({})",link.src().deviceId().toString(),
+                link.dst().deviceId().toString());
+
         return true;
     }
 
@@ -220,17 +207,15 @@ public class LinkStorageMgm {
         checkNotNull(link, "Link object cannot be null");
 
         String GETLABELS =
-                "MATCH ()-[r]->()" +
-                        "WHERE" +
-                        "r.src = '%s'" +
-                        "r.dst = '%s'" +
+                "MATCH ()-[r:%s{id:'%s'}]->()" +
                         "RETURN" +
                         "lables(r) as lables";
 
-        String src = link.src().deviceId().toString();
-        String dst = link.dst().deviceId().toString();
 
-        String query = String.format(GETLABELS,src,dst);
+
+        String id = getId(link);
+        String type = Link.Type.DIRECT.name();
+        String query = String.format(GETLABELS,type,id);
 
         StatementResult result = driver.executeCypherQuery(query);
 
@@ -243,4 +228,13 @@ public class LinkStorageMgm {
         return record.get("labels").asList(Value::asString);
 
     }
-}
+
+    private String getId(Link link){
+
+        // id = object:type:id_src:id_dst
+        String id = "%s:%s:%s:%s";
+
+        return StringUtils.lowerCase(String.format(id, Link.class.getSimpleName(), Link.Type.DIRECT.name(),
+                link.src().deviceId().toString(), link.dst().deviceId().toString()));
+    }
+ }
