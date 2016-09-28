@@ -19,30 +19,24 @@
 
 package br.ufpa.gercom.mtuldp.store;
 
-import org.onosproject.net.Device;
-import org.onosproject.net.EdgeLink;
-import org.onosproject.net.Host;
-import org.onosproject.net.Link;
+import java.util.List;
 
 /**
  * Created by fernando on 01/09/16.
  */
-public interface MtuldpStoreService {
+public interface MtuldpStoreService<T,S> {
 
 
-    // Save operations
-    boolean save(Device d);
-    boolean save(Link l);
-    boolean save(EdgeLink el);
-    boolean save(Host h);
+    boolean create(T t);
 
-    // Delete operations
-    boolean delete(Device d);
-    boolean delete(Link l);
-    boolean delete(EdgeLink el);
-    boolean delete(Host h);
+    boolean delete(T t);
 
+    boolean update (T t);
 
+    boolean exist (T t);
 
+    void setLabel(T t, S s);
+
+    List<S> getLabel(T t);
 
 }

@@ -20,8 +20,8 @@
 package br.ufpa.gercom.mtuldp.store;
 
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.lang.StringUtils;
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.onosproject.net.Device;
@@ -114,9 +114,75 @@ public class EdgeLinkStorageMgm {
         return true;
     }
 
-    public boolean delete() throws RuntimeException {
+    public boolean delete(EdgeLink edgeLink) throws RuntimeException {
         String DELETE =
-                "a";
+                "MATCH ()-[r:%s {id:'%s'}]-()}" +
+                        "DELETE" +
+                        "r";
+
+        String type = EdgeLink.Type.EDGE.name();
+        String id = getId(edgeLink);
+
+        String query = String.format(DELETE,type,id);
+
+        StatementResult result = driver.executeCypherQuery(query);
+        ResultSummary summary = result.consume();
+
+        if (summary.counters().relationshipsDeleted() == 0){
+            log.error("The EdgeLink ({}) cannot be deleted", id);
+            return false;
+        }
+
+        log.info("The EdgeLink ({}) had deleted with sucessfully", id);
+        return true;
+    }
+
+    public boolean exist (EdgeLink edgeLink) throws RuntimeException {
+
+        String EXIST =
+                "MATCH ()-[r:%s {id:'%s'}]->()" +
+                        "RETURN" +
+                        "r IS NOT NULL as result";
+
+        String id = getId(edgeLink);
+        String type = EdgeLink.Type.EDGE.name();
+
+        String query = String.format(EXIST,type,id);
+
+        StatementResult result = driver.executeCypherQuery(query);
+
+        if (result.list().isEmpty()){
+            return false;
+        }
+
+        Record record = result.single();
+
+        return record.get("result").asBoolean();
+    }
+
+    public boolean setEdgeLink(EdgeLink edgeLink,String label){
+
+         String SETLABEL =
+                "MATCH ()-[r:%s{id:'%s'}]->()" +
+                        "SET" +
+                        "r:%s";
+
+        String id = getId(edgeLink);
+        String type = EdgeLink.Type.EDGE.name();
+        String query = String.format(SETLABEL,type,id,label);
+
+        StatementResult result = driver.executeCypherQuery(query);
+        ResultSummary summary = result.consume();
+
+
+        if (summary.counters().labelsAdded() == 0){
+            log.error("Label already added to EdgeLink");
+            return false;
+        }
+
+        log.info("New label was inserted to EdgeLink ({})",id);
+
+        return true;
     }
 
     private String getId(EdgeLink edgeLink){

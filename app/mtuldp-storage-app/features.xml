@@ -20,5 +20,7 @@
         <feature>onos-api</feature>
         <bundle>mvn:br.ufpa.gercom/mtuldp-storage-app/1.0.0-SNAPSHOT</bundle>
         <bundle>mvn:br.ufpa.gercom/mtuldp-neo4j-driver/1.0.0-SNAPSHOT</bundle>
+        <bundle>mvn:io.javaslang/javaslang/2.0.3</bundle>
+        <bundle>mvn:io.javaslang/javaslang-match/2.0.3</bundle>
     </feature>
 </features>

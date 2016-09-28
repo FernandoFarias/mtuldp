@@ -81,28 +81,26 @@ public class DeviceStorageMgm {
         return true;
     }
 
-    public boolean update(DeviceId id, Device device) throws RuntimeException{
+    public boolean update(Device device) throws RuntimeException{
 
-        checkNotNull(id, "Device ID on UPDATE cannot be null");
         checkNotNull(device, "Device Object on UPDATE cannot be null");
 
         String UPDATE =
-                "MATCH (a) " +
-                        "WHERE " +
-                        "a.device_id = '%s'," +
+                "MATCH (a:%s{device_id:'%s'}) " +
                         "SET" +
                         "a.manufacturer = '%s'," +
                         "a.hwVersion = '%s'," +
                         "a.swVersion = '%s'," +
                         "a.serialNumber = '%s'";
 
+        String type = Device.Type.SWITCH.name();
         String device_id = device.id().toString();
         String manufacturer = device.manufacturer();
         String hwVersion = device.hwVersion();
         String swVersion = device.swVersion();
         String serialNumber = device.serialNumber();
 
-        String query = String.format(UPDATE,device_id,manufacturer,
+        String query = String.format(UPDATE,type,device_id,manufacturer,
                 hwVersion,swVersion,serialNumber);
 
         StatementResult result = driver.executeCypherQuery(query);
@@ -122,9 +120,7 @@ public class DeviceStorageMgm {
         checkNotNull(device, "Device Object on DELETE cannot be null");
 
         String DELETE =
-                "MATCH (a)" +
-                        "WHERE " +
-                        "a.device_id = '%s'" +
+                "MATCH (a:%s{device_id:'%s'})" +
                         "DELETE" +
                         "a";
 
@@ -134,28 +130,28 @@ public class DeviceStorageMgm {
         ResultSummary summary = result.consume();
 
         if (summary.counters().nodesDeleted() == 0 ){
-            log.info("the node ({}) cannot be updated", device.id().toString());
+            log.info("the device ({}) cannot be exist", device.id().toString());
             return false;
         }
 
         log.info("The node ({}) was deleted", device.id().toString());
-
         return true;
     }
 
 
-    public boolean exists(DeviceId id) throws RuntimeException {
+    public boolean exists(Device device) throws RuntimeException {
 
-        checkNotNull(id,"Device id cannot be null");
+        checkNotNull(device,"Device object cannot be null");
 
         String EXISTS =
-                "MATCH (a)" +
-                        "WHERE " +
-                        "a.device_id = '%s' " +
+                "MATCH (a:%s{device_id:'%s'})" +
                         "RETURN  " +
                         "a IS NOT NULL as result";
 
-        String query = String.format(EXISTS, id.toString());
+        String type = Device.Type.SWITCH.name();
+        String id = device.id().toString();
+
+        String query = String.format(EXISTS,type,id);
 
         StatementResult result = driver.executeCypherQuery(query);
 
@@ -169,26 +165,28 @@ public class DeviceStorageMgm {
 
     }
 
-    public boolean setDeviceLabel(DeviceId id, String label) throws RuntimeException {
+    public boolean setDeviceLabel(Device device, String label) throws RuntimeException {
 
-        checkNotNull(id, "Device id cannot be null");
+        checkNotNull(device, "Device object cannot be null");
         checkNotNull(label, "Device label cannot be null");
 
         String SETLABEL =
-                "MATCH (a)" +
-                        "WHERE" +
-                        "a.device_id = '%s'" +
-                        "SET a:%s";
+                "MATCH (a:%s{device_id:%s})" +
+                        "SET" +
+                        "a:%s";
 
-        String query = String.format(SETLABEL, id.toString(), label);
+        String type = Device.Type.SWITCH.name();
+        String id = device.id().toString();
+
+        String query = String.format(SETLABEL,type,id);
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
 
         if (summary.counters().labelsAdded() == 0){
-            log.error("Label already added to device ({})", id.toString());
+            log.error("Label already added to device ({})", id);
             return false;
         }
-        log.info("New label was inserted to device ({})", id.toString());
+        log.info("New label was inserted to device ({})", id);
         return true;
     }
 

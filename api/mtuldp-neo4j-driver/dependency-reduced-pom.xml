@@ -107,13 +107,13 @@
     <dependency>
       <groupId>org.onosproject</groupId>
       <artifactId>onlab-osgi</artifactId>
-      <version>1.7.0-20160830.080544-160</version>
+      <version>1.7.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.onosproject</groupId>
       <artifactId>onlab-rest</artifactId>
-      <version>1.7.0-20160830.080547-160</version>
+      <version>1.7.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -131,7 +131,7 @@
     <dependency>
       <groupId>org.onosproject</groupId>
       <artifactId>onlab-misc</artifactId>
-      <version>1.7.0-20160830.080539-160</version>
+      <version>1.7.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

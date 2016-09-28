@@ -144,7 +144,7 @@ public class LinkStorageMgm {
             return false;
         }
 
-        log.info("The link ({}) had deleted with sucessfully");
+        log.info("The link ({}) had deleted with sucessfully",id);
         return true;
     }
 

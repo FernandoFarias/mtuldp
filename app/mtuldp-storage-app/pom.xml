@@ -75,6 +75,13 @@
             <version>1.9.12</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>io.javaslang</groupId>
+            <artifactId>javaslang</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+
         <dependency>
             <groupId>br.ufpa.gercom</groupId>
             <artifactId>mtuldp-neo4j-driver</artifactId>
