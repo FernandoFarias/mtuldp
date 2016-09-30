@@ -30,28 +30,25 @@ public class Neo4jIntegration {
     protected final Logger log = getLogger(getClass());
 
     private Driver driver;
-    private Session session;
 
     Neo4jIntegration(String neo4j_url) {
         this.driver = GraphDatabase.driver(neo4j_url);
-        this.session = driver.session();
     }
 
     Neo4jIntegration(String neo4j_url, String user, String pass) {
         this.driver = GraphDatabase.driver(neo4j_url, AuthTokens.basic(user, pass));
-        this.session = driver.session();
-        if (session.isOpen()) {
-            log.info("Connection with neo4j database had opened");
-        }
+
     }
 
     public StatementResult executeCypherQuery(String query) {
+
+        final Session session = driver.session();
         StatementResult result = session.run(query);
+        session.close();
         return result;
     }
 
     public void close(){
-        session.close();
         driver.close();
         log.info("Connection wit neo4j was closed");
     }
@@ -61,12 +58,11 @@ public class Neo4jIntegration {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Neo4jIntegration that = (Neo4jIntegration) o;
-        return Objects.equal(driver, that.driver) &&
-                Objects.equal(session, that.session);
+        return Objects.equal(driver, that.driver);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(driver, session);
+        return Objects.hashCode(log, driver);
     }
 }

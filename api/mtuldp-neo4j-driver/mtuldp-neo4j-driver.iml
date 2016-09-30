@@ -6,6 +6,7 @@
         <additionalProperties>
           <property key="Bundle-Description" value="Third Party Neo4j Driver" />
           <property key="Export-Package" value="org.neo4j.driver.*" />
+          <property key="Import-Package" value="javax.net.ssl" />
           <property key="-versionpolicy" value="[$(version;==;$(@)),$(version;+;$(@)))" />
           <property key="-removeheaders" value="Ignore-Package,Include-Resource,Private-Package,Embed-Dependency" />
           <property key="Bundle-Name" value="mtuldp-neo4j-driver" />

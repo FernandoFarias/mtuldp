@@ -96,7 +96,7 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Export-Package>org.neo4j.driver.*</Export-Package>
-                        <Import-Package></Import-Package>
+                        <Import-Package>javax.net.ssl</Import-Package>
                         <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
                         <_removeheaders>Ignore-Package,Include-Resource,Private-Package,Embed-Dependency</_removeheaders>
                     </instructions>

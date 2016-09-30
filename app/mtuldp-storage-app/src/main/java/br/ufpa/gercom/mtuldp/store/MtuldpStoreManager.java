@@ -15,6 +15,7 @@
  */
 package br.ufpa.gercom.mtuldp.store;
 
+import org.apache.commons.collections.functors.SwitchClosure;
 import org.apache.felix.scr.annotations.*;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
@@ -27,6 +28,7 @@ import org.onosproject.net.link.LinkService;
 import org.slf4j.Logger;
 
 import static javaslang.API.*;
+import static javaslang.Predicates.*;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.onosproject.net.device.DeviceEvent.Type.*;
 
@@ -97,6 +99,7 @@ public class MtuldpStoreManager  {
     @Deactivate
     public void deactivate(){
 
+        deviceService.removeListener(deviceListener);
         driver.close();
         log.info("Stopped");
     }
@@ -106,11 +109,19 @@ public class MtuldpStoreManager  {
 
         @Override
         public void event(DeviceEvent event) {
-            Match(event.type()).of(
-                    Case($(DEVICE_ADDED),dstore.create(event.subject())),
-                    Case($(DEVICE_REMOVED), dstore.delete(event.subject())),
-                    Case($(DEVICE_UPDATED), dstore.update(event.subject()))
-            );
+            switch (event.type()){
+                case DEVICE_ADDED:
+                    dstore.create(event.subject());
+                    break;
+                case DEVICE_REMOVED:
+                    dstore.delete(event.subject());
+                    break;
+                case DEVICE_UPDATED:
+                    dstore.update(event.subject());
+                    break;
+                default:
+                    log.info("Event ({}) was not implemented", event.type().toString());
+            }
         }
     }
 

@@ -49,13 +49,13 @@ public class DeviceStorageMgm {
         String CREATE =
                 "MERGE " +
                         "(a:%s " +
-                        "{" +
+                        "{ " +
                         "device_id:'%s', " +
                         "manufacturer:'%s', " +
                         "hwVersion:'%s', " +
                         "swVersion:'%s', " +
                         "serialNumber:'%s'" +
-                        "}" +
+                        " } " +
                         ")";
 
         String type = Device.Type.SWITCH.name();
@@ -87,7 +87,7 @@ public class DeviceStorageMgm {
 
         String UPDATE =
                 "MATCH (a:%s{device_id:'%s'}) " +
-                        "SET" +
+                        "SET " +
                         "a.manufacturer = '%s'," +
                         "a.hwVersion = '%s'," +
                         "a.swVersion = '%s'," +
@@ -120,11 +120,13 @@ public class DeviceStorageMgm {
         checkNotNull(device, "Device Object on DELETE cannot be null");
 
         String DELETE =
-                "MATCH (a:%s{device_id:'%s'})" +
-                        "DELETE" +
+                "MATCH (a:%s{device_id:'%s'}) " +
+                        "DELETE " +
                         "a";
 
-        String query = String.format(DELETE, device.id().toString());
+        String type = Device.Type.SWITCH.name();
+        String id = device.id().toString();
+        String query = String.format(DELETE, type,id);
 
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
@@ -144,7 +146,7 @@ public class DeviceStorageMgm {
         checkNotNull(device,"Device object cannot be null");
 
         String EXISTS =
-                "MATCH (a:%s{device_id:'%s'})" +
+                "MATCH (a:%s{device_id:'%s'}) " +
                         "RETURN  " +
                         "a IS NOT NULL as result";
 
@@ -171,8 +173,8 @@ public class DeviceStorageMgm {
         checkNotNull(label, "Device label cannot be null");
 
         String SETLABEL =
-                "MATCH (a:%s{device_id:%s})" +
-                        "SET" +
+                "MATCH (a:%s{device_id:%s}) " +
+                        "SET " +
                         "a:%s";
 
         String type = Device.Type.SWITCH.name();
@@ -197,8 +199,8 @@ public class DeviceStorageMgm {
         String GETLABELS =
                 "MATCH (a)" +
                         "WHERE " +
-                        "a.device_id = %s" +
-                        "RETURN" +
+                        "a.device_id = %s " +
+                        "RETURN " +
                         "labels(a) as labels";
 
         String query = String.format(GETLABELS, id.toString());
