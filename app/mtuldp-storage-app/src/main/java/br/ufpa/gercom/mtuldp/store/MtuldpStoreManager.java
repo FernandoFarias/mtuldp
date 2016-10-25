@@ -15,7 +15,6 @@
  */
 package br.ufpa.gercom.mtuldp.store;
 
-import org.apache.commons.collections.functors.SwitchClosure;
 import org.apache.felix.scr.annotations.*;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
@@ -23,17 +22,18 @@ import org.onosproject.net.device.DeviceEvent;
 import org.onosproject.net.device.DeviceListener;
 import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.edge.EdgePortService;
+import org.onosproject.net.host.HostEvent;
+import org.onosproject.net.host.HostListener;
 import org.onosproject.net.host.HostService;
+import org.onosproject.net.link.LinkEvent;
+import org.onosproject.net.link.LinkListener;
 import org.onosproject.net.link.LinkService;
 import org.slf4j.Logger;
 
-import static javaslang.API.*;
-import static javaslang.Predicates.*;
 import static org.slf4j.LoggerFactory.getLogger;
-import static org.onosproject.net.device.DeviceEvent.Type.*;
 
 @Component(immediate = true)
-public class MtuldpStoreManager  {
+public class MtuldpStoreManager {
 
 
     private final Logger log = getLogger(getClass());
@@ -77,22 +77,29 @@ public class MtuldpStoreManager  {
      */
 
     private final InnerDeviceListener deviceListener = new InnerDeviceListener();
+    private final InnerLinkListener linkListener = new InnerLinkListener();
 
     @Activate
     public void activate(){
 
+        appid = coreService.registerApplication("br.ufpa.gercom.mtuldp.store");
+
         driver = new Neo4jIntegration("bolt://neo4j", "neo4j", "admin");
 
+        // Services
         edstore = new EdgeLinkStorageMgm(driver);
         lstore = new LinkStorageMgm(driver);
         hstore = new HostStorageMgm(driver);
         dstore = new DeviceStorageMgm(driver);
 
-        appid = coreService.registerApplication("br.ufpa.gercom.mtuldp.store");
 
+        // Listeners
         deviceService.addListener(deviceListener);
+        linkService.addListener(linkListener);
 
         log.info("Started");
+
+
 
     }
 
@@ -119,11 +126,55 @@ public class MtuldpStoreManager  {
                 case DEVICE_UPDATED:
                     dstore.update(event.subject());
                     break;
+                case PORT_STATS_UPDATED:
+                    break;
                 default:
                     log.info("Event ({}) was not implemented", event.type().toString());
             }
         }
     }
+
+    private class InnerLinkListener implements LinkListener {
+        @Override
+        public void event(LinkEvent event) {
+
+            switch (event.type()){
+                case LINK_ADDED:
+                    lstore.create(event.subject());
+                    break;
+                case LINK_UPDATED:
+                    lstore.update(event.subject());
+                    break;
+                case LINK_REMOVED:
+                    lstore.delete(event.subject());
+                    break;
+                default:
+                    log.info("Event ({}) was not implemented", event.type().toString());
+            }
+        }
+    }
+    private class InnerHostListener implements HostListener {
+        @Override
+        public void event(HostEvent event) {
+            switch (event.type()){
+                case HOST_ADDED:
+                    hstore.create(event.subject());
+                    break;
+                case HOST_MOVED:
+                    break;
+                case HOST_REMOVED:
+                    hstore.delete(event.subject());
+                    break;
+                case HOST_UPDATED:
+                    hstore.update(event.subject());
+                    break;
+                default:
+                    log.info("Event ({}) was not implemented", event.type().toString());
+
+            }
+        }
+    }
+    
 
 }
 

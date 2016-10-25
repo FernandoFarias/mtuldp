@@ -34,7 +34,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <onos.version>1.7.0-SNAPSHOT</onos.version>
         <onos.app.name>br.ufpa.gercom.mtuldp.store</onos.app.name>
-        <onos.app.title>MTULDP Neo4j Store</onos.app.title>
+        <onos.app.title>MTULDP Neo4j Storage</onos.app.title>
         <onos.app.origin>Gercom</onos.app.origin>
         <onos.app.category>Database</onos.app.category>
         <onos.app.url>http://onosproject.org</onos.app.url>

@@ -23,11 +23,15 @@ package br.ufpa.gercom.mtuldp.store;
 import org.apache.commons.lang.StringUtils;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.onosproject.net.Device;
 import org.onosproject.net.EdgeLink;
 import org.onosproject.net.Host;
+import org.onosproject.net.Link;
 import org.slf4j.Logger;
+
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -160,7 +164,7 @@ public class EdgeLinkStorageMgm {
         return record.get("result").asBoolean();
     }
 
-    public boolean setEdgeLink(EdgeLink edgeLink,String label){
+    public boolean setEdgeLinkLabel(EdgeLink edgeLink,String label){
 
          String SETLABEL =
                 "MATCH ()-[r:%s{id:'%s'}]->()" +
@@ -183,6 +187,32 @@ public class EdgeLinkStorageMgm {
         log.info("New label was inserted to EdgeLink ({})",id);
 
         return true;
+    }
+
+    public List<String> getEdgeLinkLabels(EdgeLink edgeLink ){
+        checkNotNull(edgeLink, "EdgeLink object cannot be null");
+
+        String GETLABELS =
+                "MATCH ()-[r:%s{id:'%s'}]->()" +
+                        "RETURN" +
+                        "lables(r) as lables";
+
+
+
+        String id = getId(edgeLink);
+        String type = EdgeLink.Type.EDGE.name();
+        String query = String.format(GETLABELS,type,id);
+
+        StatementResult result = driver.executeCypherQuery(query);
+
+        if (result.list().isEmpty()){
+            log.error("Edgelink could be not exist");
+            return null;
+        }
+
+        Record record = result.single();
+        return record.get("labels").asList(Value::asString);
+
     }
 
     private String getId(EdgeLink edgeLink){

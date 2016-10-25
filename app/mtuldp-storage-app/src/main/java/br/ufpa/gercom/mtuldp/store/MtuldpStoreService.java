@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Created by fernando on 01/09/16.
  */
-public interface MtuldpStoreService<T,S> {
+public interface MtuldpStoreService<T> {
 
 
     boolean create(T t);
@@ -35,8 +35,8 @@ public interface MtuldpStoreService<T,S> {
 
     boolean exist (T t);
 
-    void setLabel(T t, S s);
+    void setLabel(T t, String s);
 
-    List<S> getLabel(T t);
+    List<String> getLabels(T t);
 
 }
