@@ -18,9 +18,13 @@ package br.ufpa.gercom.mtuldp.store;
 import org.apache.felix.scr.annotations.*;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
+import org.onosproject.net.DefaultEdgeLink;
+import org.onosproject.net.EdgeLink;
 import org.onosproject.net.device.DeviceEvent;
 import org.onosproject.net.device.DeviceListener;
 import org.onosproject.net.device.DeviceService;
+import org.onosproject.net.edge.EdgePortEvent;
+import org.onosproject.net.edge.EdgePortListener;
 import org.onosproject.net.edge.EdgePortService;
 import org.onosproject.net.host.HostEvent;
 import org.onosproject.net.host.HostListener;
@@ -78,6 +82,7 @@ public class MtuldpStoreManager {
 
     private final InnerDeviceListener deviceListener = new InnerDeviceListener();
     private final InnerLinkListener linkListener = new InnerLinkListener();
+    private final InnerHostListener hostListener = new InnerHostListener();
 
     @Activate
     public void activate(){
@@ -96,6 +101,7 @@ public class MtuldpStoreManager {
         // Listeners
         deviceService.addListener(deviceListener);
         linkService.addListener(linkListener);
+        hostService.addListener(hostListener);
 
         log.info("Started");
 
@@ -107,6 +113,8 @@ public class MtuldpStoreManager {
     public void deactivate(){
 
         deviceService.removeListener(deviceListener);
+        linkService.removeListener(linkListener);
+        hostService.removeListener(hostListener);
         driver.close();
         log.info("Stopped");
     }
@@ -174,7 +182,18 @@ public class MtuldpStoreManager {
             }
         }
     }
-    
+
+    private class InnerEdgeLinkListener implements EdgePortListener {
+
+
+        @Override
+        public void event(EdgePortEvent event) {
+            switch (event.type()){
+                case EDGE_PORT_ADDED:
+                    
+            }
+        }
+    }
 
 }
 
