@@ -23,6 +23,7 @@ import org.onosproject.net.ConnectPoint;
 import org.onosproject.net.Device;
 import org.onosproject.net.Host;
 import org.onosproject.net.Link;
+import org.onosproject.net.link.LinkService;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -40,6 +41,9 @@ public class MtuldpStorageManager implements MtuldpStorageService {
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private CoreService coreService;
+
+    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    private LinkService linkService;
 
     private Neo4jIntegration driver;
     private EdgeLinkStorageMgm edstore;
@@ -72,8 +76,11 @@ public class MtuldpStorageManager implements MtuldpStorageService {
 
     @Override
     public void create(Device device) {
+
         if (!dstore.create(device))
             throw new RuntimeException("Cannot create device");
+
+        log.info("New node inserted");
     }
 
     @Override
@@ -120,8 +127,17 @@ public class MtuldpStorageManager implements MtuldpStorageService {
 
     @Override
     public void update(Device device) {
-        if (!dstore.update(device))
-            throw new RuntimeException("Cannot update device");
+
+        if (dstore.exists(device)){
+            delete(device);
+            create(device);
+
+            linkService.getDeviceLinks(device.id()).forEach(link -> {
+               lstore.create(link);
+            });
+        } else {
+            create(device);
+        }
     }
 
     @Override
@@ -200,5 +216,7 @@ public class MtuldpStorageManager implements MtuldpStorageService {
     public StatementResult runCypherQuery(String query) {
         return driver.executeCypherQuery(query);
     }
+
+
 }
 

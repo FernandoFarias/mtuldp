@@ -125,7 +125,7 @@ public class DeviceStorageMgm {
 
         String DELETE =
                 "MATCH (a:%s{id:'%s'}) " +
-                        "DELETE " +
+                        "DETACH DELETE " +
                         "a";
 
         String type = Device.Type.SWITCH.name();
