@@ -22,12 +22,14 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
+        <module name="mtuldp-discovery-app" />
         <module name="mtuldp-neo4j-driver" />
         <module name="mtuldp-storage-app" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="mtuldp" target="1.5" />
+      <module name="mtuldp-discovery-app" target="1.8" />
       <module name="mtuldp-neo4j-app" target="1.8" />
       <module name="mtuldp-neo4j-driver" target="1.8" />
       <module name="mtuldp-neo4j-store" target="1.8" />

@@ -2,7 +2,7 @@
  * Copyright 2016 GERCOM, Lab. UFPA.
  *
  * Developer: fernando
- * Serial: 01/09/16 15:56
+ * Serial: 27/10/16 15:43
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,26 +17,29 @@
  * limitations under the License.
  */
 
-package br.ufpa.gercom.mtuldp.store;
+package br.ufpa.gercom.mtuldp.discovery;
 
-import java.util.List;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.slf4j.Logger;
 
-/**
- * Created by fernando on 01/09/16.
- */
-public interface MtuldpStoreService<T> {
+import static org.slf4j.LoggerFactory.getLogger;
 
+@Component(immediate = true)
+public class MtuldpDiscoveryManager {
 
-    boolean create(T t);
+    private final Logger log = getLogger(getClass());
 
-    boolean delete(T t);
+    private static final String APP_NAME = "br.ufpa.gercom.mtuldp.discovery";
 
-    boolean update (T t);
+    @Activate
+    public void activate() {
 
-    boolean exist (T t);
+    }
 
-    void setLabel(T t, String s);
+    @Deactivate
+    public void deactivate() {
 
-    List<String> getLabels(T t);
-
+    }
 }

@@ -24,7 +24,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mtuldp-storage-app</artifactId>
+    <artifactId>mtuldp-discovery-app</artifactId>
     <packaging>bundle</packaging>
 
     <description>ONOS OSGi bundle archetype</description>
@@ -33,12 +33,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <onos.version>1.8.0-SNAPSHOT</onos.version>
-        <onos.app.name>br.ufpa.gercom.mtuldp.store</onos.app.name>
-        <onos.app.title>MTULDP Neo4j Storage</onos.app.title>
-        <onos.app.origin>Gercom</onos.app.origin>
-        <onos.app.category>Database</onos.app.category>
-        <onos.app.url>http://onosproject.org</onos.app.url>
-        <onos.app.readme>Neo4j database driver</onos.app.readme>
+        <onos.app.name>br.ufpa.gercom.mtuldp.discovery</onos.app.name>
+        <onos.app.title>MTU Protocol Discovery</onos.app.title>
+        <onos.app.origin>Foo, Inc.</onos.app.origin>
+        <onos.app.category>Protocol</onos.app.category>
+        <onos.app.url>https://github.com/FernandoFarias/mtuldp</onos.app.url>
+        <onos.app.readme>ONOS OSGi bundle archetype.</onos.app.readme>
     </properties>
 
     <dependencies>
@@ -74,18 +74,6 @@
             <artifactId>org.apache.felix.scr.annotations</artifactId>
             <version>1.9.12</version>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>io.javaslang</groupId>
-            <artifactId>javaslang</artifactId>
-            <version>2.0.3</version>
-        </dependency>
-
-        <dependency>
-            <groupId>br.ufpa.gercom</groupId>
-            <artifactId>mtuldp-neo4j-driver</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

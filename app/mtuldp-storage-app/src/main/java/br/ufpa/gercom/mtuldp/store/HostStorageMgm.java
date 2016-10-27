@@ -19,10 +19,12 @@
 
 package br.ufpa.gercom.mtuldp.store;
 
+import org.apache.commons.lang.StringUtils;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.summary.ResultSummary;
+import org.onosproject.net.Device;
 import org.onosproject.net.Host;
 import org.onosproject.net.HostId;
 import org.slf4j.Logger;
@@ -52,13 +54,14 @@ public class HostStorageMgm {
                 "MERGE" +
                         "(a:%s" +
                         "{" +
+                        "id:'%s', " +
                         "host_id:'%s'," +
                         "mac:'%s'," +
                         "ip:%s," +
                         "vlan:'%s'" +
                         "})";
 
-
+        String id = getId(host);
         String type = Host.class.getSimpleName();
         String host_id = host.id().toString();
         String mac = host.mac().toString();
@@ -92,16 +95,14 @@ public class HostStorageMgm {
 
         String UPDATE =
                 "MATCH" +
-                        "(a:%s)" +
-                        "WHERE" +
-                        "a.host_id = '%s'" +
-                        "SET" +
+                        "(a:%s{id:'%s'}) " +
+                        "SET " +
                         "a.mac = '%s'," +
                         "a.vlan = '%s'," +
                         "a.ip = %s";
 
         String type = Host.class.getSimpleName();
-        String id = host.id().toString();
+        String id = getId(host);
         String mac = host.mac().toString();
         String vlan = host.vlan().toString();
         Set<String> ip = new LinkedHashSet<>();
@@ -128,43 +129,40 @@ public class HostStorageMgm {
         checkNotNull(host, "Host Object cannot be null");
 
         String DELETE =
-                "MATCH (a:%s)" +
-                        "WHERE" +
-                        "a.host_id = '%s'" +
-                        "DELETE" +
+                "MATCH (a:%s {id:'%s'}) " +
+                        "DELETE " +
                         "a";
 
         String type = Host.class.getSimpleName();
-        String host_id = host.id().toString();
+        String id = getId(host);
 
-        String query = String.format(DELETE, type, host_id);
+        String query = String.format(DELETE, type, id);
 
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
 
         if (summary.counters().nodesDeleted() == 0) {
-            log.error("Host id ({}) cannot be updated, host not exist or transaction error", host_id);
+            log.error("Host id ({}) cannot be updated, host not exist or transaction error", id);
             return false;
         }
 
-        log.info("Host id ({}) was deleted", host_id);
+        log.info("Host id ({}) was deleted", id);
         return true;
     }
 
-    public boolean exist(HostId id) throws RuntimeException {
+    public boolean exist(Host host) throws RuntimeException {
 
-        checkNotNull(id, "Host id Object cannot be null");
+        checkNotNull(host, "Host Object cannot be null");
 
         String EXIST =
-                "MATCH (a:%s)" +
-                        "WHERE" +
-                        "a.host_id = '%s'" +
+                "MATCH (a:%s{id:'%s'}) " +
                         "RETURN " +
                         "a IS NOT NULL as result";
 
         String type = Host.class.getSimpleName();
+        String id = getId(host);
 
-        String query = String.format(EXIST, type, id.toString());
+        String query = String.format(EXIST, type, id);
 
         StatementResult result = driver.executeCypherQuery(query);
 
@@ -177,61 +175,66 @@ public class HostStorageMgm {
         return Boolean.getBoolean(record.get("result").asString());
     }
 
-    public boolean setHostLabel(HostId id, String label) throws RuntimeException {
+    public boolean setHostLabel(Host host, String label) throws RuntimeException {
 
-        checkNotNull(id, "Host id cannot be null");
+        checkNotNull(host, "Host id cannot be null");
         checkNotNull(label, "Host label cannot be null");
 
 
         String SETLABEL =
-                "MATCH (a:%s)" +
-                        "WHERE" +
-                        "a.host_id = '%s'" +
-                        "SET a:%s";
+                "MATCH (a:%s {id:'%s'})" +
+                        "SET " +
+                        "a:%s";
 
 
         String type = Host.class.getSimpleName();
+        String id = getId(host);
 
-        String query = String.format(SETLABEL, type, id.toString(), label);
+        String query = String.format(SETLABEL, type, id, label);
 
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
 
         if (summary.counters().labelsAdded() == 0) {
-            log.error("Label already added to host ({})", id.toString());
+            log.error("Label already added to host ({})", id);
             return false;
         }
 
-        log.info("New label was inserted to Host ({})", id.toString());
+        log.info("New label was inserted to Host ({})", id);
         return true;
 
     }
 
-    public List<String> getHostLabels(HostId id) throws RuntimeException {
+    public List<String> getHostLabels(Host host) throws RuntimeException {
 
-        checkNotNull(id, "Host id cannot be null");
+        checkNotNull(host, "Host id cannot be null");
 
         String GETLABEL =
-                "MATCH (a:%s)" +
-                        "WHERE" +
-                        "a.host_id = '%s'" +
-                        "RETURN" +
+                "MATCH (a:%s {id:'%s'}) " +
+                        "RETURN " +
                         "labels(a) as labels";
 
-
         String type = Host.class.getSimpleName();
+        String id = getId(host);
 
-        String query = String.format(GETLABEL, type, id.toString());
+        String query = String.format(GETLABEL, type, id);
 
         StatementResult result = driver.executeCypherQuery(query);
 
         if (result.list().isEmpty()) {
-            log.error("Object id ({}) could be not exist", id.toString());
+            log.error("Object id ({}) could be not exist", id);
             return null;
         }
 
         Record record = result.single();
         return record.get("labels").asList(Value::asString);
+    }
+
+    private String getId(Host host){
+
+        // id = object:type:mac:vlan
+        String id = "%s:%s:%s:%s";
+        return StringUtils.lowerCase(String.format(id, Host.class.getSimpleName(),host.mac(), host.vlan()));
     }
 }
 

@@ -12,6 +12,7 @@
     <modules>
         <module>api/mtuldp-neo4j-driver</module>
         <module>app/mtuldp-storage-app</module>
+        <module>app/mtuldp-discovery-app</module>
     </modules>
 
     <properties>

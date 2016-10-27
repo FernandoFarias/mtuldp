@@ -19,12 +19,14 @@
 
 package br.ufpa.gercom.mtuldp.store;
 
+import org.apache.commons.lang.StringUtils;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.summary.ResultSummary;
 import org.onosproject.net.Device;
 import org.onosproject.net.DeviceId;
+import org.onosproject.net.Link;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -50,7 +52,8 @@ public class DeviceStorageMgm {
                 "MERGE " +
                         "(a:%s " +
                         "{ " +
-                        "device_id:'%s', " +
+                        "id: '%s'," +
+                        "device:'%s', " +
                         "manufacturer:'%s', " +
                         "hwVersion:'%s', " +
                         "swVersion:'%s', " +
@@ -58,6 +61,7 @@ public class DeviceStorageMgm {
                         " } " +
                         ")";
 
+        String id = getId(device);
         String type = Device.Type.SWITCH.name();
         String device_id = device.id().toString();
         String manufacturer = device.manufacturer();
@@ -66,7 +70,7 @@ public class DeviceStorageMgm {
         String serialNumber = device.serialNumber();
 
 
-        String query = String.format(CREATE, type, device_id, manufacturer,
+        String query = String.format(CREATE, type, id, device_id, manufacturer,
                 hwVersion, swVersion, serialNumber);
 
         StatementResult result = driver.executeCypherQuery(query);
@@ -86,32 +90,32 @@ public class DeviceStorageMgm {
         checkNotNull(device, "Device Object on UPDATE cannot be null");
 
         String UPDATE =
-                "MATCH (a:%s{device_id:'%s'}) " +
+                "MATCH (a:%s{id:'%s'}) " +
                         "SET " +
                         "a.manufacturer = '%s'," +
                         "a.hwVersion = '%s'," +
                         "a.swVersion = '%s'," +
                         "a.serialNumber = '%s'";
 
+        String id = getId(device);
         String type = Device.Type.SWITCH.name();
-        String device_id = device.id().toString();
         String manufacturer = device.manufacturer();
         String hwVersion = device.hwVersion();
         String swVersion = device.swVersion();
         String serialNumber = device.serialNumber();
 
-        String query = String.format(UPDATE,type,device_id,manufacturer,
+        String query = String.format(UPDATE,type,id,manufacturer,
                 hwVersion,swVersion,serialNumber);
 
         StatementResult result = driver.executeCypherQuery(query);
         ResultSummary summary = result.consume();
 
         if (summary.counters().containsUpdates()){
-            log.error("Device id ({}) cannot be updated, data is not different or transaction error", device_id);
+            log.error("Device id ({}) cannot be updated, data is not different or transaction error", id);
             return true;
         }
 
-        log.info("Device id ({}) was updated", device_id);
+        log.info("Device id ({}) was updated", id);
         return false;
     }
 
@@ -120,12 +124,12 @@ public class DeviceStorageMgm {
         checkNotNull(device, "Device Object on DELETE cannot be null");
 
         String DELETE =
-                "MATCH (a:%s{device_id:'%s'}) " +
+                "MATCH (a:%s{id:'%s'}) " +
                         "DELETE " +
                         "a";
 
         String type = Device.Type.SWITCH.name();
-        String id = device.id().toString();
+        String id = getId(device);
         String query = String.format(DELETE, type,id);
 
         StatementResult result = driver.executeCypherQuery(query);
@@ -146,12 +150,12 @@ public class DeviceStorageMgm {
         checkNotNull(device,"Device object cannot be null");
 
         String EXISTS =
-                "MATCH (a:%s{device_id:'%s'}) " +
+                "MATCH (a:%s{id:'%s'}) " +
                         "RETURN  " +
                         "a IS NOT NULL as result";
 
         String type = Device.Type.SWITCH.name();
-        String id = device.id().toString();
+        String id = getId(device);
 
         String query = String.format(EXISTS,type,id);
 
@@ -173,12 +177,12 @@ public class DeviceStorageMgm {
         checkNotNull(label, "Device label cannot be null");
 
         String SETLABEL =
-                "MATCH (a:%s{device_id:%s}) " +
+                "MATCH (a:%s{id:%s}) " +
                         "SET " +
                         "a:%s";
 
         String type = Device.Type.SWITCH.name();
-        String id = device.id().toString();
+        String id = getId(device);
 
         String query = String.format(SETLABEL,type,id);
         StatementResult result = driver.executeCypherQuery(query);
@@ -192,18 +196,19 @@ public class DeviceStorageMgm {
         return true;
     }
 
-    public List<String> getDeviceLabels(DeviceId id) throws RuntimeException {
+    public List<String> getDeviceLabels(Device device) throws RuntimeException {
 
-        checkNotNull(id, "Device id cannot be null");
+        checkNotNull(device, "Device cannot be null");
 
         String GETLABELS =
-                "MATCH (a)" +
-                        "WHERE " +
-                        "a.device_id = %s " +
+                "MATCH (a:%s{id:%s}) " +
                         "RETURN " +
                         "labels(a) as labels";
 
-        String query = String.format(GETLABELS, id.toString());
+        String id = getId(device);
+        String type = Device.Type.SWITCH.name();
+
+        String query = String.format(GETLABELS, type, id);
 
         StatementResult result = driver.executeCypherQuery(query);
 
@@ -214,5 +219,13 @@ public class DeviceStorageMgm {
 
         Record record = result.single();
         return record.get("labels").asList(Value::asString);
+    }
+    private String getId(Device device){
+
+        // id = object:type:protocol:id
+        String id = "%s:%s:%s";
+
+        return StringUtils.lowerCase(String.format(id, Device.class.getSimpleName(), Device.Type.SWITCH.name(),
+                device.id().toString()));
     }
 }
